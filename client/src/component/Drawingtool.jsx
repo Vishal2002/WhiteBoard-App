@@ -9,7 +9,7 @@ function createElement(x1, y1, x2, y2,shape) {
         case 'line':
           return { x1, y1, x2, y2, roughEle: gen.line(x1, y1, x2, y2) };
         case 'rectangle':
-          return { x1, y1, x2, y2, roughEle: gen.rectangle(x1, y1, x2 - x1, y2 - y1) };
+          return { x1, y1, x2, y2, roughEle: gen.rectangle(x1, y1, x2 - x1, y2 - y1,{fill:'red', fillStyle: 'solid'}) };
         case 'circle':
           const radius = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) / 2;
           const centerX = (x1 + x2) / 2;
@@ -19,58 +19,44 @@ function createElement(x1, y1, x2, y2,shape) {
           return null;
       }
     }
-const DrawingTool = () => {
-  //creating a state of a shape element which is initially empty
+const DrawingTool = ({ onSelectShape }) => {
   const [elements, setElements] = useState([]);
-  //creating a state of drawing which is initially false
   const [drawing, setDrawing] = useState(false);
   const [actions, setActions] = useState([]);
   const [selectedShape, setSelectedShape] = useState('line')
 
+  const handleShapeChange = (event) => {
+    const selectedShape = event.target.value;
+    setSelectedShape(selectedShape);
+    onSelectShape(selectedShape);
+  };
 
   useLayoutEffect(() => {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const rc = rough.canvas(canvas);
-
-    // console.log("I am inside useLayoutEffect")
-
-    //clearing the screen everytime it's re-rendered
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-   
-    //performs a specified action for each element in the array
-    
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
     elements.forEach((ele) => rc.draw(ele.roughEle));
     
   }, [elements]);
   
-  const handleShapeChange = (event) => {
-    setSelectedShape(event.target.value);
-  };
+ 
   
   const startDrawing = (event) => {
-    console.log('Start');
     setDrawing(true);
     const { clientX, clientY } = event;
     const newEle = createElement(clientX, clientY, clientX, clientY,selectedShape);
     setElements((state) => [...state, newEle]); //copying to the previous state
   };
   const finishDrawing = () => {
-    console.log('Finish');
     setDrawing(false);
   };
   const draw = (event) => {
-    if (!drawing) return; //not in a mousedown postion
-    console.log('Drawing');
+    if (!drawing) return; 
     const { clientX, clientY } = event;
-    console.log(clientX, clientY);
     const index = elements.length - 1; 
     const { x1, y1 } = elements[index];
     const updatedEle = createElement(x1, y1, clientX, clientY,selectedShape);
-    console.log('Updated Element:', updatedEle);
-    //update the position with the new element instead of the previous one
-
     const copyElement = [...elements];
     copyElement[index] = updatedEle; 
     setElements(copyElement);
